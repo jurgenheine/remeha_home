@@ -58,6 +58,9 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
 
             await self.async_update_technical_data(appliance_id)
             await self.async_update_power_consumption_today(appliance_id, now, appliance)
+            await self.async_update_power_consumption_total(appliance_id, now, appliance)
+            await self.async_update_power_consumption_yearly(appliance_id, now, appliance)
+            await self.async_update_power_consumption_monthly(appliance_id, now, appliance)
             self.update_device_info(appliance_id, appliance)
             self.update_climate_zones(appliance_id, appliance)
             self.update_hot_water_zones(appliance_id, appliance)
