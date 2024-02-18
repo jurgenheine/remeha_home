@@ -146,8 +146,117 @@ class RemehaHomeAPI:
             f"/appliances/{appliance_id}/energyconsumption/daily?startDate={today_string}&endDate={end_of_today_string}",
         )
         response.raise_for_status()
-        return await response.json()
+        responsejson = response.json()
+        responsejson =  await response.json()
+        return self.sum_power_results(responsejson)
 
+    async def async_get_total_consumption_data_till_yesterday(self, appliance_id: str) -> dict:
+        """Get technical information for an appliance."""
+        start = datetime.datetime(2000, 1, 1)
+
+        end = datetime.datetime.now().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+
+        start_string = start.strftime("%Y-%m-%d %H:%M:%S.%fZ")
+        end_string = end.strftime("%Y-%m-%d %H:%M:%S.%fZ")
+
+        response = await self._async_api_request(
+            "GET",
+            f"/appliances/{appliance_id}/energyconsumption/yearly?startDate={start_string}&endDate={end_string}",
+        )
+        response.raise_for_status()
+        responsejson =  await response.json()
+        return self.sum_power_results(responsejson)
+
+    async def async_get_total_consumption_data_till_today(self, appliance_id: str) -> dict:
+        """Get technical information for an appliance."""
+        start = datetime.datetime(2000, 1, 1)
+
+        end = datetime.datetime.now().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+
+        start_string = start.strftime("%Y-%m-%d %H:%M:%S.%fZ")
+        end_string = end.strftime("%Y-%m-%d %H:%M:%S.%fZ")
+
+        response = await self._async_api_request(
+            "GET",
+            f"/appliances/{appliance_id}/energyconsumption/yearly?startDate={start_string}&endDate={end_string}",
+        )
+        response.raise_for_status()
+        responsejson =  await response.json()
+        return self.sum_power_results(responsejson)
+
+    async def async_get_current_year_consumption_data_till_today(self, appliance_id: str) -> dict:
+        """Get technical information for an appliance."""
+        start = datetime.datetime.now().replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+
+        end = datetime.datetime.now().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+
+        start_string = start.strftime("%Y-%m-%d %H:%M:%S.%fZ")
+        end_string = end.strftime("%Y-%m-%d %H:%M:%S.%fZ")
+
+        response = await self._async_api_request(
+            "GET",
+            f"/appliances/{appliance_id}/energyconsumption/yearly?startDate={start_string}&endDate={end_string}",
+        )
+        response.raise_for_status()
+        responsejson =  await response.json()
+        return self.sum_power_results(responsejson)
+
+    async def async_get_current_month_consumption_data_till_today(self, appliance_id: str) -> dict:
+        """Get technical information for an appliance."""
+        start = datetime.datetime.now().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+
+        end = datetime.datetime.now().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+
+        start_string = start.strftime("%Y-%m-%d %H:%M:%S.%fZ")
+        end_string = end.strftime("%Y-%m-%d %H:%M:%S.%fZ")
+
+        response = await self._async_api_request(
+            "GET",
+            f"/appliances/{appliance_id}/energyconsumption/monthly?startDate={start_string}&endDate={end_string}",
+        )
+        response.raise_for_status()
+        responsejson =  await response.json()
+        return self.sum_power_results(responsejson)
+
+    def sum_power_results(self, power_response):
+        """Sum all power results."""
+
+        heating_energy_consumed = 0.0
+        hot_water_energy_consumed = 0.0
+        cooling_energy_consumed = 0.0
+        heating_energy_delivered = 0.0
+        hot_water_energy_delivered = 0.0
+        cooling_energy_delivered = 0.0
+        #check if data returned
+        if len(power_response["data"]) > 0:
+            for yeardata in power_response["data"]:
+                heating_energy_consumed +=yeardata["heatingEnergyConsumed"]
+                hot_water_energy_consumed += yeardata["hotWaterEnergyConsumed"]
+                cooling_energy_consumed += yeardata["coolingEnergyConsumed"]
+                heating_energy_delivered += yeardata["heatingEnergyDelivered"]
+                hot_water_energy_delivered += yeardata["hotWaterEnergyDelivered"]
+                cooling_energy_delivered += yeardata["coolingEnergyDelivered"]
+
+        return  {
+            "heatingEnergyConsumed": heating_energy_consumed,
+            "hotWaterEnergyConsumed": hot_water_energy_consumed,
+            "coolingEnergyConsumed": cooling_energy_consumed,
+            "heatingEnergyDelivered": heating_energy_delivered,
+            "hotWaterEnergyDelivered": hot_water_energy_delivered,
+            "coolingEnergyDelivered": cooling_energy_delivered
+        }
 
 class RemehaHomeAuthFailed(Exception):
     """Error to indicate that authentication failed."""
