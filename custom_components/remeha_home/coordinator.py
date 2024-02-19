@@ -168,11 +168,16 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_update_power_consumption_today(self, appliance_id, now, appliance):
         """Update current day power consumption data."""
+
+        if appliance_id not in self.appliance_consumption_data:
+            self.appliance_consumption_data[appliance_id] = self.get_empty_power_values()
+        if appliance_id not in self.appliance_increase_consumption_data:
+            self.appliance_increase_consumption_data[appliance_id] = self.get_empty_power_values()
+
         # Only update appliance usage data every 15 minutes
         if (( appliance_id not in self.appliance_last_consumption_data_update)
               or ( now - self.appliance_last_consumption_data_update[appliance_id]
-                   >= timedelta(minutes=14, seconds=45))
-              or( appliance_id not in self.appliance_consumption_data)):
+                   >= timedelta(minutes=14, seconds=45))):
             try:
                 consumption_data = (await
                                     self.api.async_get_consumption_data_for_today( appliance_id )
@@ -185,15 +190,15 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
                 )
 
                 # We need to set increae values directly because we need last result
-                self.appliance_increase_consumption_data = self.diff_power_results(
-                    consumption_data,
-                    self.appliance_consumption_data[
-                        appliance_id
-                    ] or self.get_empty_power_values())
 
-                self.appliance_consumption_data[
-                        appliance_id
-                    ] = self.calculate_cop( consumption_data)
+                self.appliance_increase_consumption_data = self.diff_power_results(
+                        consumption_data,
+                        self.appliance_consumption_data[
+                            appliance_id
+                        ])
+
+                self.appliance_consumption_data[ appliance_id
+                        ] = self.calculate_cop( consumption_data)
 
                 self.appliance_last_consumption_data_update[appliance_id] = now
             except ClientResponseError as err:
@@ -208,21 +213,27 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
                 appliance_id
             ]
 
+
         appliance[appliance_id]["increaseConsumptionData"] = (
-            self.appliance_increase_consumption_data[
+                self.appliance_increase_consumption_data[
                 appliance_id
-            ])
+                ])
 
     async def async_update_power_consumption_total(self, appliance_id, now, appliance):
         """Update total power consumption data."""
+
+        if appliance_id not in self.appliance_total_consumption_data:
+            self.appliance_total_consumption_data[
+                        appliance_id
+                    ] =self.get_empty_power_values()
+
         # Only update appliance usage data every 15 minutes
         if ( appliance_id not in self.appliance_last_total_consumption_data_update
-             or now.date() > self.appliance_last_total_consumption_data_update[appliance_id].date()
-             or appliance_id not in self.appliance_total_consumption_data):
+             or now.date() >
+             self.appliance_last_total_consumption_data_update[appliance_id].date()):
             try:
                 consumption_data = (await
-                    self.api.async_get_total_consumption_data_till_yesterday( appliance_id )
-                    or self.get_empty_power_values())
+                    self.api.async_get_total_consumption_data_till_yesterday( appliance_id ))
                 _LOGGER.debug(
                     "Requested consumption data for appliance %s: %s",
                     appliance_id,
@@ -253,15 +264,19 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_update_power_consumption_yearly(self, appliance_id, now, appliance):
         """Update yearly power consumption data."""
+
+        if appliance_id not in self.appliance_last_thisyear_consumption_data_update:
+            self.appliance_last_thisyear_consumption_data_update[
+                        appliance_id
+                ] =self.get_empty_power_values()
+
         # Only update appliance usage data every 15 minutes
         if ( appliance_id not in self.appliance_last_thisyear_consumption_data_update
              or (now.date() >
-                 self.appliance_last_thisyear_consumption_data_update[appliance_id].date())
-             or appliance_id not in self.appliance_thisyear_consumption_data):
+                 self.appliance_last_thisyear_consumption_data_update[appliance_id].date())):
             try:
                 consumption_data = (await
-                    self.api.async_get_current_year_consumption_data_till_today( appliance_id )
-                    or self.get_empty_power_values())
+                    self.api.async_get_current_year_consumption_data_till_today( appliance_id ))
                 _LOGGER.debug(
                     "Requested consumption data for appliance %s: %s",
                     appliance_id,
@@ -287,20 +302,24 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
             ],
             self.appliance_consumption_data[
                 appliance_id
-            ] or self.get_empty_power_values()
+            ]
         )
 
     async def async_update_power_consumption_monthly(self, appliance_id, now, appliance):
         """Update yearly power consumption data."""
+
+        if appliance_id not in self.appliance_last_thismonth_consumption_data_update:
+            self.appliance_last_thismonth_consumption_data_update[
+                        appliance_id
+                    ] =self.get_empty_power_values()
+
         # Only update appliance usage data every 15 minutes
         if ( appliance_id not in self.appliance_last_thismonth_consumption_data_update
              or (now.date() >
-                 self.appliance_last_thismonth_consumption_data_update[appliance_id].date())
-             or appliance_id not in self.appliance_thismonth_consumption_data):
+                 self.appliance_last_thismonth_consumption_data_update[appliance_id].date())):
             try:
                 consumption_data = (await
-                    self.api.async_get_current_month_consumption_data_till_today( appliance_id )
-                    or self.get_empty_power_values())
+                    self.api.async_get_current_month_consumption_data_till_today( appliance_id ))
                 _LOGGER.debug(
                     "Requested consumption data for appliance %s: %s",
                     appliance_id,
@@ -326,7 +345,7 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
             ],
             self.appliance_consumption_data[
                 appliance_id
-            ] or self.get_empty_power_values()
+            ]
         )
 
     def sum_power_results(self, power_response1, power_response2):
