@@ -83,7 +83,7 @@ APPLIANCE_SENSOR_TYPES = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-        SensorEntityDescription(
+    SensorEntityDescription(
         key="consumptionData.heatingCOP",
         name="Today heating COP",
         entity_registry_enabled_default=False
@@ -146,7 +146,7 @@ APPLIANCE_SENSOR_TYPES = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-        SensorEntityDescription(
+    SensorEntityDescription(
         key="increaseConsumptionData.heatingCOP",
         name="Current heating COP",
         entity_registry_enabled_default=False
@@ -209,7 +209,7 @@ APPLIANCE_SENSOR_TYPES = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-        SensorEntityDescription(
+    SensorEntityDescription(
         key="totalConsumptionData.heatingCOP",
         name="Total heating COP",
         entity_registry_enabled_default=False
@@ -272,7 +272,7 @@ APPLIANCE_SENSOR_TYPES = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-        SensorEntityDescription(
+    SensorEntityDescription(
         key="yearlyConsumptionData.heatingCOP",
         name="Current year heating COP",
         entity_registry_enabled_default=False
@@ -281,7 +281,7 @@ APPLIANCE_SENSOR_TYPES = [
         key="yearlyConsumptionData.coolingCOP",
         name="Current year cooling COP",
         entity_registry_enabled_default=False
-    )
+    ),
     SensorEntityDescription(
         key="yearlyConsumptionData.hotWaterCOP",
         name="Current year hot water COP",
@@ -335,7 +335,7 @@ APPLIANCE_SENSOR_TYPES = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-        SensorEntityDescription(
+    SensorEntityDescription(
         key="monthlyConsumptionData.heatingCOP",
         name="Current month heating COP",
         entity_registry_enabled_default=False
@@ -344,7 +344,7 @@ APPLIANCE_SENSOR_TYPES = [
         key="monthlyConsumptionData.coolingCOP",
         name="Current month cooling COP",
         entity_registry_enabled_default=False
-    )
+    ),
     SensorEntityDescription(
         key="monthlyConsumptionData.hotWaterCOP",
         name="Current month hot water COP",
