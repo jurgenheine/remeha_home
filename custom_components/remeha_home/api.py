@@ -150,25 +150,6 @@ class RemehaHomeAPI:
         responsejson =  await response.json()
         return self.sum_power_results(responsejson)
 
-    async def async_get_total_consumption_data_till_yesterday(self, appliance_id: str) -> dict:
-        """Get technical information for an appliance."""
-        start = datetime.datetime(2000, 1, 1)
-
-        end = datetime.datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-
-        start_string = start.strftime("%Y-%m-%d %H:%M:%S.%fZ")
-        end_string = end.strftime("%Y-%m-%d %H:%M:%S.%fZ")
-
-        response = await self._async_api_request(
-            "GET",
-            f"/appliances/{appliance_id}/energyconsumption/yearly?startDate={start_string}&endDate={end_string}",
-        )
-        response.raise_for_status()
-        responsejson =  await response.json()
-        return self.sum_power_results(responsejson)
-
     async def async_get_total_consumption_data_till_today(self, appliance_id: str) -> dict:
         """Get technical information for an appliance."""
         start = datetime.datetime(2000, 1, 1)
