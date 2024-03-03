@@ -204,14 +204,11 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
         """Update current day power consumption data."""
 
         # Only update appliance usage data every 15 minutes
-        if (( appliance_id not in self.appliance_last_consumption_data_update)
-              or ( now - self.appliance_last_consumption_data_update[appliance_id]
-                   >= timedelta(minutes=14, seconds=45))):
+        if  appliance_id not in self.appliance_last_consumption_data_update or \
+             now - self.appliance_last_consumption_data_update[appliance_id] \
+                   >= timedelta(minutes=14, seconds=45):
             try:
-                consumption_data = (await
-                                    self.api.async_get_consumption_data_for_today( appliance_id )
-                                    or self.get_empty_power_values())
-
+                consumption_data = await self.api.async_get_consumption_data_for_today(appliance_id)
                 _LOGGER.debug(
                     "Requested consumption data for appliance %s: %s",
                     appliance_id,
@@ -219,14 +216,13 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
                 )
 
                 # We need to set increae values directly because we need last result
-                self.appliance_increase_consumption_data = self.diff_power_results(
+                self.appliance_increase_consumption_data[appliance_id] = self.diff_power_results(
                         consumption_data,
-                        self.appliance_consumption_data[
-                            appliance_id
-                        ])
+                        self.appliance_consumption_data[appliance_id]
+                    )
 
-                self.appliance_consumption_data[ appliance_id
-                        ] = self.calculate_cop( consumption_data)
+                self.appliance_consumption_data[appliance_id] = \
+                    self.calculate_cop( consumption_data)
 
                 self.appliance_last_consumption_data_update[appliance_id] = now
             except ClientResponseError as err:
@@ -240,34 +236,24 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
         """Update current day power consumption data."""
 
         # Get the cached consumption data for the appliance or use default values
-        appliance[appliance_id]["consumptionData"] = self.appliance_consumption_data[
-                appliance_id
-            ]
+        appliance["consumptionData"] = \
+            self.appliance_consumption_data[appliance_id]
 
-        appliance[appliance_id]["increaseConsumptionData"] = (
-                self.appliance_increase_consumption_data[
-                appliance_id
-                ])
+        appliance["increaseConsumptionData"]= \
+            self.appliance_increase_consumption_data[appliance_id]
 
     async def async_get_totals_power_consumption(self, appliance_id, now):
         """Get power consumption data."""
 
-        if ( appliance_id not in self.appliance_last_consumption_data_dayly_update
-             or now.date() >
-             self.appliance_last_consumption_data_dayly_update[appliance_id].date()):
+        if ( appliance_id not in self.appliance_last_consumption_data_dayly_update or \
+            now.date() > self.appliance_last_consumption_data_dayly_update[appliance_id].date()):
             try:
-                self.appliance_total_consumption_data[
-                        appliance_id
-                    ]  = (await
-                    self.api.async_get_total_consumption_data_till_today( appliance_id ))
-                self.appliance_thisyear_consumption_data[
-                        appliance_id
-                    ]  = (await
-                    self.api.async_get_current_year_consumption_data_till_today( appliance_id ))
-                self.appliance_thismonth_consumption_data[
-                        appliance_id
-                    ]  = (await
-                    self.api.async_get_current_month_consumption_data_till_today( appliance_id ))
+                self.appliance_total_consumption_data[appliance_id] = \
+                    await self.api.async_get_total_consumption_data_till_today(appliance_id)
+                self.appliance_thisyear_consumption_data[appliance_id]= \
+                    await self.api.async_get_current_year_consumption_data_till_today(appliance_id)
+                self.appliance_thismonth_consumption_data[appliance_id]= \
+                    await self.api.async_get_current_month_consumption_data_till_today(appliance_id)
 
                 self.appliance_last_consumption_data_dayly_update[appliance_id] = now
             except ClientResponseError as err:
@@ -281,62 +267,52 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
         """Update total power consumption data."""
 
         # Get the cached total and current dayconsumption data for the appliance
-        appliance[appliance_id]["totalConsumptionData"] = self.sum_power_results(
-            self.appliance_total_consumption_data[
-                appliance_id
-            ],
-            self.appliance_consumption_data[
-                appliance_id
-            ]
+        appliance["totalConsumptionData"] = self.sum_power_results(
+            self.appliance_total_consumption_data[appliance_id],
+            self.appliance_consumption_data[appliance_id]
         )
 
     async def async_update_power_consumption_yearly(self, appliance_id, appliance):
         """Update yearly power consumption data."""
 
         # Get the cached total and current dayconsumption data for the appliance
-        appliance[appliance_id]["yearlyConsumptionData"] = self.sum_power_results(
-            self.appliance_thisyear_consumption_data[
-                appliance_id
-            ],
-            self.appliance_consumption_data[
-                appliance_id
-            ]
+        appliance["yearlyConsumptionData"] = self.sum_power_results(
+            self.appliance_thisyear_consumption_data[appliance_id],
+            self.appliance_consumption_data[appliance_id]
         )
 
     async def async_update_power_consumption_monthly(self, appliance_id, appliance):
         """Update yearly power consumption data."""
 
         # Get the cached total and current dayconsumption data for the appliance
-        appliance[appliance_id]["monthlyConsumptionData"] = self.sum_power_results(
-            self.appliance_thismonth_consumption_data[
-                appliance_id
-            ],
-            self.appliance_consumption_data[
-                appliance_id
-            ]
+        appliance["monthlyConsumptionData"] = self.sum_power_results(
+            self.appliance_thismonth_consumption_data[appliance_id],
+            self.appliance_consumption_data[appliance_id]
         )
 
     def sum_power_results(self, power_response1, power_response2):
         """Return Sum of both power results."""
 
-        heating_energy_consumed = (power_response1["heatingEnergyConsumed"] +
-                                   power_response2["heatingEnergyConsumed"])
-        hot_water_energy_consumed = (power_response1["hotWaterEnergyConsumed"] +
-                                     power_response2["hotWaterEnergyConsumed"])
-        cooling_energy_consumed = (power_response1["coolingEnergyConsumed"] +
-                                   power_response2["coolingEnergyConsumed"])
-        heating_energy_delivered = (power_response1["heatingEnergyDelivered"] +
-                                    power_response2["heatingEnergyDelivered"])
-        hot_water_energy_delivered = (power_response1["hotWaterEnergyDelivered"] +
-                                      power_response2["hotWaterEnergyDelivered"])
-        cooling_energy_delivered = (power_response1["coolingEnergyDelivered"] +
-                                    power_response2["coolingEnergyDelivered"])
-        return self.calculate_cop({"heatingEnergyConsumed": heating_energy_consumed,
+        heating_energy_consumed = power_response1["heatingEnergyConsumed"] + \
+                                   power_response2["heatingEnergyConsumed"]
+        hot_water_energy_consumed = power_response1["hotWaterEnergyConsumed"] + \
+                                     power_response2["hotWaterEnergyConsumed"]
+        cooling_energy_consumed = power_response1["coolingEnergyConsumed"] + \
+                                   power_response2["coolingEnergyConsumed"]
+        heating_energy_delivered = power_response1["heatingEnergyDelivered"] + \
+                                    power_response2["heatingEnergyDelivered"]
+        hot_water_energy_delivered = power_response1["hotWaterEnergyDelivered"] + \
+                                      power_response2["hotWaterEnergyDelivered"]
+        cooling_energy_delivered = power_response1["coolingEnergyDelivered"] + \
+                                    power_response2["coolingEnergyDelivered"]
+        return self.calculate_cop({
+            "heatingEnergyConsumed": heating_energy_consumed,
             "hotWaterEnergyConsumed": hot_water_energy_consumed,
             "coolingEnergyConsumed": cooling_energy_consumed,
             "heatingEnergyDelivered": heating_energy_delivered,
             "hotWaterEnergyDelivered": hot_water_energy_delivered,
-            "coolingEnergyDelivered": cooling_energy_delivered})
+            "coolingEnergyDelivered": cooling_energy_delivered
+        })
 
     def diff_power_results(self, power_response1, power_response2):
         """Return diff between the power results."""
@@ -353,12 +329,14 @@ class RemehaHomeUpdateCoordinator(DataUpdateCoordinator):
                                       power_response2["hotWaterEnergyDelivered"])
         cooling_energy_delivered = abs(power_response1["coolingEnergyDelivered"] -
                                     power_response2["coolingEnergyDelivered"])
-        return self.calculate_cop({"heatingEnergyConsumed": heating_energy_consumed,
+        return self.calculate_cop({
+            "heatingEnergyConsumed": heating_energy_consumed,
             "hotWaterEnergyConsumed": hot_water_energy_consumed,
             "coolingEnergyConsumed": cooling_energy_consumed,
             "heatingEnergyDelivered": heating_energy_delivered,
             "hotWaterEnergyDelivered": hot_water_energy_delivered,
-            "coolingEnergyDelivered": cooling_energy_delivered})
+            "coolingEnergyDelivered": cooling_energy_delivered
+        })
 
     def calculate_cop(self, power_response):
         """Calculate and add cop values."""
